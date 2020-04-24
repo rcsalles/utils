@@ -8,9 +8,9 @@ import click
 @click.option("--user", help="ssh user")
 @click.option("--host", help="ssh host")
 @click.option("--port", help="ssh port")
-@click.option("--option", required=True, help="option: 'on' or 'off'")
-def main(user, host, port, option):
-    if option == 'off':
+@click.option("--turn", required=True, help="options are: 'on' or 'off'")
+def main(user, host, port, turn):
+    if turn == 'off':
         turnoff()
         return
 
