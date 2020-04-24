@@ -8,7 +8,12 @@ import click
 @click.option("--user", help="ssh user")
 @click.option("--host", help="ssh host")
 @click.option("--port", help="ssh port")
-def create(user, host, port):
+@click.option("--option", required=True, help="option: 'on' or 'off'")
+def main(user, host, port, option):
+    if option == 'off':
+        turnoff()
+        return
+
     if not user:
         user = click.prompt('Please enter a username', type=str)
     
@@ -18,11 +23,11 @@ def create(user, host, port):
     if not port:
         port = click.prompt('Please enter a port', type=int)
     
-    click.echo(f"Connection to: {user}@{host} -p{port}!")
-    clear()
     connect(user, host, port)
 
 def connect(user, host, port):
+    clear()
+    click.echo(f"Connecting to: {user}@{host} -p{port}!")
     os.system(f'ssh -f -N -M -S /tmp/sshtunnel -D 1090 {user}@{host} -p{port}')
     os.system('networksetup -setsocksfirewallproxy wi-fi 127.0.0.1 1090')
     os.system('networksetup -setsocksfirewallproxystate wi-fi on')
@@ -31,11 +36,17 @@ def clear():
     if os.path.exists('/tmp/sshtunnel'):
         os.remove('/tmp/sshtunnel')
     try:
-        output = subprocess.check_output("lsof -nP -tiTCP:1090", shell=True)
-        if output:
-            os.system(f'kill -9 {output}')
+        output = subprocess.getoutput("lsof -nP -tiTCP:1090")
+        for pid in output.split('\n'):
+            if pid:
+                os.system(f'kill -9 {pid}')
     except Exception:
         pass
 
+def turnoff():
+    click.echo(f"turning off proxy")
+    clear()
+    os.system('networksetup -setsocksfirewallproxystate wi-fi off')
+
 if __name__ == '__main__':
-    create()
+    main()
